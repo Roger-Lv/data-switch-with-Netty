@@ -1,0 +1,10 @@
+{
+  "agentAddress": "127.0.0.1:21030",
+  "publicKey": "04180354fdb6507f8ab98ccfbe165ce11da74ba733f81af86ad6d32216b32cf4f797c559d50ceeefbf4c760c3483840471c67471b90acdffb388cd7d496d9a1610",
+  "privateKey": "1d4196947f59532db6f8f4055e58474a48db8f30b476ae3edc66406464521b3b",
+  "ypkPath": "./build/contractexample-1.3.3.ypk",
+  "killBeforeStart": "ContractExample",
+  "createParam": {
+  },
+  "cpHost": "host.docker.internal"
+}

@@ -1,0 +1,8 @@
+rootProject.name = 'IoDSwitch'
+include 'backend'
+include 'common'
+include 'data-switch'
+include 'pragmatic-switch'
+include 'irp-adapter-for-switch'
+include 'mock-address-intf'
+include 'log4j-configuration-setter'

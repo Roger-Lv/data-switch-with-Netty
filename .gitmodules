@@ -1,0 +1,4 @@
+[submodule "log4j-configuration-setter"]
+	path = log4j-configuration-setter
+	url = git@gitee.com:BDWare/log4j-configuration-setter.git
+	branch = master

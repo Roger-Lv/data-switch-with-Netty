@@ -1,0 +1,90 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.bdware.bdcontract:simple-ypk-packer:${YPKPackerVersion}"
+        classpath "org.bdware.bdcontract:ypk-deploy-tool:${YPKDeployVersion}"
+    }
+}
+
+plugins {
+    id 'java'
+    id 'java-library'
+}
+def moduleName = "data-switch"
+def relativePath = "./${moduleName}"
+def currVersion = "0.0.1"
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:none'
+    options.compilerArgs << '-Xlint:deprecation' << "-Werror"
+}
+task prepareKotlinBuildScriptModel {
+
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '8.0'
+}
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }
+    test {
+        java {
+            srcDir 'src/test/java'
+        }
+        resources {
+            srcDir 'src/test/resources'
+        }
+    }
+}
+repositories {
+    maven {
+        url "http://tomp2p.net/dev/mvn/"
+        allowInsecureProtocol = true
+    }
+}
+
+dependencies {
+    api 'org.apache.logging.log4j:log4j-core:2.17.2'
+    api 'org.apache.logging.log4j:log4j-api:2.17.2'
+    implementation "org.bdware.doip:doip-audit-tool:${AuditToolVersion}"
+    implementation 'io.netty:netty-codec:4.1.77.Final'
+    implementation 'io.netty:netty-codec-http:4.1.77.Final'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation group: 'org.bdware.bdcontract', name: 'sdk-java', version: '1.0.9'
+    implementation 'org.jsoup:jsoup:1.16.1'
+    testImplementation 'junit:junit:4.13.2'
+    implementation "org.bdware.doip:doip-audit-tool:${AuditToolVersion}"
+    implementation "org.bdware.sc:cp:${CPVersion}"
+    implementation project(":pragmatic-switch")
+    implementation project(":common")
+    implementation "org.bdware.doip:doip-sdk:${DOIPVersion}"
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
+    implementation group: 'org.dom4j', name: 'dom4j', version: '2.1.4'
+    testImplementation 'org.jfree:jfreechart:1.5.3'
+    implementation 'com.github.ben-manes.caffeine:caffeine:2.9.0'
+    implementation 'org.json:json:20210307'
+    implementation 'io.prometheus:simpleclient_hotspot:0.16.0'
+    implementation 'io.prometheus:simpleclient:0.16.0'
+    implementation 'io.prometheus:simpleclient_common:0.16.0'
+    implementation 'io.prometheus:simpleclient_httpserver:0.16.0'
+   // implementation 'net.tomp2p:tomp2p-all:5.0-Beta8'
+}
+
+tasks.processResources.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+tasks.processTestResources.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
+task buildYPK() {
+    doLast {
+//        org.bdware.datanet.YPKPacker.staticPack("${relativePath}/build/${appName}.zip", "${relativePath}/build/${appName}-${currVersion}.ypk")
+    }
+}

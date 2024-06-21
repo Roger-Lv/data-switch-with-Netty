@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'idea'
+}
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:none'
+    options.compilerArgs << '-Xlint:deprecation' << "-Werror"
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+project(':log4j-configuration-setter') {
+    group = "org.bdware.sc.example"
+    repositories {
+        mavenCentral()
+    }
+}
+project(':backend') {
+    group = "org.bdware.sc.example"
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
+project(':common') {
+    group = "org.bdware.sc.example"
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
+project(':data-switch') {
+    group = "org.bdware.sc.example"
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
+project(':pragmatic-switch') {
+    group = "org.bdware.sc.example"
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
+project(':irp-adapter-for-switch') {
+    group = "org.bdware.sc.example"
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
+project(':mock-address-intf') {
+    group = "org.bdware.sc.example"
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}

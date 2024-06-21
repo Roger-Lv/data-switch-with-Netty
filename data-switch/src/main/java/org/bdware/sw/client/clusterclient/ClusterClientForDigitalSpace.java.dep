@@ -1,0 +1,41 @@
+package org.bdware.sw.client.clusterclient;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.bdware.doip.audit.EndpointConfig;
+import org.bdware.doip.codec.doipMessage.DoipMessage;
+import org.bdware.doip.endpoint.client.DoipMessageCallback;
+import org.bdware.sw.client.ClientForDigitalSpace;
+
+import java.util.concurrent.ConcurrentHashMap;
+
+public class ClusterClientForDigitalSpace {
+    static Logger LOGGER = LogManager.getLogger(ClusterClientForDigitalSpace.class);
+    ConcurrentHashMap<EndpointConfig, ClientForDigitalSpace> configClientForDigitalSpaceConcurrentHashMap = new ConcurrentHashMap<>();
+    public EndpointConfig config;
+    public ClientForDigitalSpace clientForDigitalSpace;
+
+    public ClusterClientForDigitalSpace(EndpointConfig config) {
+        if (this.config == null)
+            this.config = config;
+        if (this.clientForDigitalSpace == null)
+            this.clientForDigitalSpace = new ClientForDigitalSpace(config);
+        configClientForDigitalSpaceConcurrentHashMap.put(config, new ClientForDigitalSpace(config));
+    }
+
+    public void addCache(EndpointConfig config) {
+        configClientForDigitalSpaceConcurrentHashMap.put(config, new ClientForDigitalSpace(config));
+    }
+
+    public void deleteCache(EndpointConfig config) {
+        configClientForDigitalSpaceConcurrentHashMap.remove(config);
+    }
+
+    public void sendMessage(DoipMessage doipMessage, EndpointConfig endpointConfig, DoipMessageCallback cb) {
+        if (config == this.config)
+            this.clientForDigitalSpace.sendMessage(doipMessage, cb);
+        else
+            configClientForDigitalSpaceConcurrentHashMap.get(endpointConfig).sendMessage(doipMessage, cb);
+    }
+
+}

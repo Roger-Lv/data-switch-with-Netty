@@ -1,0 +1,48 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.bdware.bdcontract:simple-ypk-packer:${YPKPackerVersion}"
+        classpath "org.bdware.bdcontract:ypk-deploy-tool:${YPKDeployVersion}"
+    }
+}
+plugins {
+    id 'java'
+    id 'java-library'
+}
+def moduleName = "common"
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:none'
+    options.compilerArgs << '-Xlint:deprecation' << "-Werror"
+}
+tasks.processResources.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+tasks.processTestResources.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }
+    test {
+        java {
+            srcDir 'src/test/java'
+        }
+        resources {
+            srcDir 'src/test/resources'
+        }
+    }
+}
+
+dependencies {
+    api 'org.apache.logging.log4j:log4j-core:2.17.2'
+    api 'org.apache.logging.log4j:log4j-api:2.17.2'
+    implementation "org.bdware.doip:doip-audit-tool:${AuditToolVersion}"
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation "org.bdware.sc:cp:${CPVersion}"
+    testImplementation 'junit:junit:4.13.2'
+}
