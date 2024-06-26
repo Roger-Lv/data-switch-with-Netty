@@ -1,78 +1,25 @@
-# 数联网交换机参考实现
-## 交换机管理接口说明
-见链接：[README.management.md](data-switch%2FREADME.management.md)
+# Digital networking switches
 
-## 交换机架构说明
-路由系统由两层网络组成，一是路由系统本身存储的KV，是个标识网络；二是路由系统组网所需的BDO/DDO的标识网络。
-我们称第一个标识网络为路由网络；第二个标识网络为组网网络。
+## Switch overall introduction
 
-交换系统需要配置网关(DDO )。
-交换系统需要配置路由系统（DDO 1)。
-交换系统需要支持自动注册。
-因此，交换系统本身需要一个标识，这个标识管理于路由网络。
+Digital Networking is a technical solution to interconnect heterogeneous data spaces using standardized and protocolized ideas. Through the Digital Networking Gateway, the heterogeneity of different data spaces is shielded; through the Digital Networking Switch, the DOIP message forwarding across data spaces is realized; and through the Digital Networking Router, the correspondence between the logos in the heterogeneous space and the Digital Networking Switch is managed.
 
-路由器系统的DDO管理于组网网络。
-网关的DDO管理于路由网络。
-交换机本身也会组成一个网，形成DDO,管理于路由网络？
+This switch is mainly based on Java language using Netty framework to implement the heterogeneous data space oriented digital networking switch, through the use of DOIP-SDK, IRP-SDK, Caffiene high-performance caching components, optimized caching, optimization of connection pooling based on FixedChannelPool, based on the development of JCE interface. Designed and realized a digital networking switch using Sansec encryption card, etc., which can be used by Grafana and the built-in Prometheus for statistics of digital networking switch related indexes, and deployed in a number of cloud servers through the related Controller class and Javascript related interface calling code and its deploy method, and can be directly deployed through the DOBrowser. DOBrowser can be used directly through the DOBrowser to call the relevant interfaces of the switch. In terms of functionality, the Digital Networking Switch can correctly interact with other Digital Networking Switches or Digital Networking Gateways to complete the correct parsing of DOIP protocol requests and correct forwarding of packets for packet switching; in terms of performance optimization, it optimizes the client connection, caching and other aspects. Meanwhile, this paper innovatively constructs a cache load test set based on Pareto distribution and conducts targeted tests on performance optimization aspects, and the experimental results show that Digital Networking Switch achieves high-performance, high-availability, high-stability, cross-space, and high-compatibility data sending/receiving, data location and acquisition.
 
-方式一：将交换机的标识和交换机网络的标识通过“路由网络”存储。
-代价：需要扩展一下DOAClusterClient。
+## Switch Module Design
 
-<!---
-方式二：将交换机的标识和交换机网络的标识通过”组网网络“存储。
-    代价：需要把交换机的标识使用“组网网来分配”，而不是随机一个串。
+![data-switch (2).png](https://s2.loli.net/2024/06/24/OkHeSntc8BjJZuf.png)
 
-方式三：将交换机的标识用“路由网络存储”，交换机网络的标识通过”组网网络“存储。
-    代价：交换机既需要路由网络的标识，还需要组网网络的标识。
+​	The TCP Listener is used to handle TCP-based DOIP protocol network communications, acting as a listener, configuring and starting the TCP server through the Data-switch Controller, managing connections and data processing, as well as providing statistics and monitoring functions. In the TCP Listener (i.e., the Data-switch Controller), there are several Handlers, including NetworkTrafficStatHandler (a channel processor based on the Netty framework for monitoring and counting network traffic), MessageEnvelopeCodec (a codec that handles the DOIP protocol's MessageEnvelopeCodec (a key component that handles the coding and decoding of MessageEnvelope objects in the DOIP protocol and ensures that data is transmitted and parsed correctly in network communications), MessageEnvelopeAggregator (a component that is used to aggregate DoipMessage objects into the MessageEnvelope container and to parse the MessageEnvelope parsed back into DoipMessage objects), SwitchHandler (a channel handler specialized in processing messages in the DOIP protocol, which performs the appropriate processing logic based on the type of operation of the message, if the message is a request and contains command flags, and if the message's ID matches that of the switch) and DOHandler (one of the key components of the DOIP protocol processing in the DNS switch, which is responsible for receiving and processing incoming DOIP messages and distributing the request to the correct processing client based on the type and content of the message).
 
-方式四：将交换机的标识用“组网网络”，交换机网络的标识通过”路由网络存储“存储。XX
--->
+​	The Dispatcher component of DOHandler will distribute the DOIP requests to three different ClusterClients ( ClusterClientForDigitalSpace, ClientForLocationSystem, ClusterClientForSwitch) or directly return the corresponding requests to the digital space/routing system/next-hop switch.
 
+​	The relevant statistical metrics of the Digital Networking Switch are implemented based on Prometheus and Grafana. metricsForGrafana will collect various statistical metrics (including different network traffic, number of requests, etc.), which will be collected by Prometheus and visualized by Grafana.
 
-路由网络中有两个特殊的DOL。一个是交换机网络的DDO?
-另一个是“网关”的？网关是特别的，不是全网可见的？所以网关的是独立的一个“小网”。网关的标识是一个不组网的，只提供给某个交换机的“标识解析网络”。
-称之为空间组网网络。空间组网网络是每个空间有一个。不与其他空间互联。
-所以网关的标识，是“空间组网网络”里的标识（即现在的IRPAdapter里管理的）。
+​	Configuration and deployment of Digital Networking Switch relies on Data-switch Controller component, which can be configured locally/configured to a remote server according to the parameters of the corresponding configuration file, and can ultimately be run on the smart contract-based NUDCR related components, with DOBrowser for startup and invocation of the corresponding interfaces and the The DOBrowser is used to start and invoke the corresponding interfaces and display the visualization interface.
 
-配置项：
+## Performance
 
-- 需要配置空间组网中的IRP地址(网关的），这个地址也可以用来解析和判断DO在不在这个空间里。也可以使用`DOAClusterClientFor网关`
-  来向这个空间发起DOIP请求。
-- 需要配置路由系统的组网网络的IRP地址（为了路由网络的），及路由系统的标识。
-  用于定位。 `DOAClusterClientForRouter，路由网络的DDO标识`
-- 与其他交换机的连接使用时，使用DoipClientImpl直连。
-- 为了主动注册，需要知道网关的标识。
--
-- 自动注册流程时，使用网关的DDO。 `DOAClusterClientForRouterBroadcast, 使用路由网络替代IRP的那个，交换网络的DDO标识`
+After testing, without enabling the cacheForDoipMessage module, if the cacheForAddress module does not hit at all, the maximum concurrent number of switches will be less than the maximum concurrent number of DoaClusterClient under the worst case scenario (900 or so); if the cacheForAddress module hits at all, the actual maximum concurrent DOIP requests supported is 6000QPS; if the cacheForDoipMessage module is enabled, the maximum concurrent DOIP requests supported is 6000QPS under the full hit scenario. If the cacheForAddress module is fully hit, the maximum concurrent DOIP requests supported is 6000 QPS; if the cacheForDoipMessage module is enabled, the maximum concurrent DOIP requests supported is 14000 QPS under the premise of a full hit; therefore, the maximum concurrent requests supported by the switch is strongly correlated with the two major cache hit rates, and the maximum concurrent requests supported is about 8000 QPS after evaluation in the actual situation. The maximum number of concurrent requests that the switch can support in real-world conditions is evaluated to be about 8000.
 
-| 配置项                     | 用况              | 配置项名称                                                   |
-|-------------------------|-----------------|---------------------------------------------------------|
-| 网关的标识解析系统地址             | 用于向空间转发消息       | gatewayIRPURL                                           |
-| 网关的标识 （DDO/BDO）         | **用于订阅标识流**      | gatewayId                                               |
-| 路由网络的标识解析系统地址           | 用于发起定位请求、注册定位信息 | routerIRPURL                                            |
-| 路由网络的标识 （DDO/BDO）       | 用于发起定位请求、注册定位信息 | routerId                                                |
-| 交换机网络的标识 (DOL，它的内容包括标识) | 用于自动注册过程，进行广播查询 | switchNetworkDOL                                        |
-| 交换机的公钥/私钥               | 用于身份认证          | 在switchProp中。                                           |
-| 交换机的基本信息                | 基本信息            | switchProp:{ip,port,name,switchId,publicKey,privateKey} |
-| 空间中的标识流的ID（DP流量）        | 用于主动注册          | idStreams                                               |
-
-| 网关的配置                   | 用况              | 配置项名称                                          |
-|-------------------------|-----------------|------------------------------------------------|
-| IRPURL                  |       |                          |
-| DOIPURL4Switch          |    |                                    |
-| DOIPURL4Client          |  |                                |
-| id,privateKey,publicKey |   |   |
-
-
-
-
-
-
-## 介绍
-
-| 系统  | 标识格式   | 实现方式          | 谁发的              |
-|-----|--------|---------------|------------------|
-| 网关  | handle | DDO           | 空间内自己部署的一个标识解析系统 |
-| 交换机 |        |               |
-| 路由器 | handle | 路由器的组网网络分配的标识 |
-
+![jprofiler.png](https://s2.loli.net/2024/06/26/LHiYc4g23fhuyM6.png)
