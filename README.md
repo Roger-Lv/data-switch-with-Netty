@@ -1,4 +1,4 @@
-# Digital networking switches、
+# Digital networking switches
 
 [The project's main address is here](https://edu.gitee.com/pkudataspace/repos/pkudataspace/iod-switch)
 
