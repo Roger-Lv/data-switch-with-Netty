@@ -1,14 +1,12 @@
 package org.bdware.sw.listener;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bdware.doip.audit.EndpointConfig;
@@ -29,6 +27,7 @@ import org.bdware.sw.statistics.Statistics;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class DataSwitchTCPListener extends NettyTCPDoipListener implements NettyDataSwitchListener {
 
@@ -76,19 +75,22 @@ public class DataSwitchTCPListener extends NettyTCPDoipListener implements Netty
             DOHandler doHandler = new DOHandler(dispatcher, statistics, switchHandler, entryList, metrics);
             //childHandler 只对workerGroup起作用，监听已经连接的客户端的Channel的动作和状态
             b.childHandler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    ChannelPipeline pipeline = ch.pipeline();
+                        @Override
+                        protected void initChannel(SocketChannel ch) throws Exception {
+                            ChannelPipeline pipeline = ch.pipeline();
 
-                    pipeline.addLast(new LengthFieldBasedFrameDecoder(maxFrame, 20, 4, 0, 0))
-                            //贴到这后面
-                            .addLast(networkTrafficStatHandler).addLast(new MessageEnvelopeCodec()).addLast(new MessageEnvelopeAggregator(maxFrame - MessageEnvelope.ENVELOPE_LENGTH));
-                    listenerConfig.addExtraCodec(pipeline);
-                    pipeline.addLast(switchHandler).addLast(doHandler);
+                            pipeline.addLast(new LengthFieldBasedFrameDecoder(maxFrame, 20, 4, 0, 0))
+                                    //贴到这后面
+                                    .addLast(networkTrafficStatHandler).addLast(new MessageEnvelopeCodec()).addLast(new MessageEnvelopeAggregator(maxFrame - MessageEnvelope.ENVELOPE_LENGTH));
+                            listenerConfig.addExtraCodec(pipeline);
+                            pipeline.addLast( new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
+                            pipeline.addLast(switchHandler).addLast(doHandler);
 //                                    .addLast(new DPHandler())
-                    //这里注释掉的原因是加上跑不通，就是发送请求会失败
-                }
-            });
+                            //这里注释掉的原因是加上跑不通，就是发送请求会失败
+                        }
+                    }).childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000) // 设置连接超时时间为30秒
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)// 设置TCP长连接，保持连接活跃;
+                    .childOption(ChannelOption.SO_BACKLOG,256);
 
             ch = b.bind().syncUninterruptibly().channel();
             logger.info("在" + ch.localAddress() + "上开启监听");
